@@ -1,15 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import scapy.all as scapy
 import socket
+import scapy.all as scapy
 
-from core.database import engine
-from models.User import Base
 from routes.userRoutes import router as user_router
-
 
 app = FastAPI()
 
+# CORS for mobile frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # tighten later
@@ -17,17 +15,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# -----------------------------
+# Utility: Get local IP address
+# -----------------------------
+def get_local_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+    finally:
+        s.close()
+    return ip
 
-# def get_local_ip():
-#     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-#     s.connect(("8.8.8.8", 80))
-#     ip = s.getsockname()[0]
-#     s.close()
-#     return ip
-# =======
-app.include_router(user_router, prefix="/user")
-
-
+# -----------------------------
+# Network Scan Logic
+# -----------------------------
 def scan_network():
     local_ip = get_local_ip()
     subnet = local_ip.rsplit(".", 1)[0] + ".0/24"
@@ -39,7 +41,7 @@ def scan_network():
     result = scapy.srp(packet, timeout=2, verbose=False)[0]
 
     devices = []
-    for sent, received in result:
+    for _, received in result:
         devices.append({
             "ip": received.psrc,
             "mac": received.hwsrc,
@@ -48,8 +50,19 @@ def scan_network():
 
     return devices
 
+# -----------------------------
+# Routes
+# -----------------------------
+@app.get("/")
+def root():
+    return {"status": "Backend running"}
+
 @app.get("/devices")
 def get_devices():
     return {
+        "count": len(scan_network()),
         "devices": scan_network()
     }
+
+# User routes
+app.include_router(user_router, prefix="/user")
