@@ -39,3 +39,34 @@ def login_user(db: Session, email: str, password: str):
     token_data = {"first_name": user.firstName, "last_name": user.lastName, "email": user.email}
     access_token = create_access_token(token_data)
     return {"token": access_token, "token_type": "bearer"}, None
+
+def get_user_details(db: Session, email:str):
+    user = db.query(User).filter(User.email == email).first()
+
+    if not user:
+        return none, "User not found"
+    
+    user_data = {
+        "id": user.id,
+        "firstName": user.firstName,
+        "lastName": user.lastName,
+        "email": user.email
+    }
+    return user_data, None
+
+def update_user_profile(db: Session, current_email:str, email: str, firstName: str, lastName:str):
+    user = db.query(User).filter(User.email == current_email).first()
+
+    if not user:
+        return none, "User not found"
+    
+    user.firstName = firstName
+    user.lastName = lastName
+    user.email = email
+
+    db.commit()
+    db.refresh(user)
+
+    token_data = {"first_name": user.firstName, "last_name": user.lastName, "email": user.email}
+    access_token = create_access_token(token_data)
+    return {"token": access_token, "token_type": "bearer"}, None
