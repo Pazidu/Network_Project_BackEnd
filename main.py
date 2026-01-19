@@ -4,6 +4,7 @@ import socket
 import scapy.all as scapy
 
 from routes.userRoutes import router as user_router
+from routes.pingRoutes import ping_router 
 
 app = FastAPI()
 
@@ -66,3 +67,4 @@ def get_devices():
 
 # User routes
 app.include_router(user_router, prefix="/user")
+app.include_router(ping_router, prefix="/ping")
