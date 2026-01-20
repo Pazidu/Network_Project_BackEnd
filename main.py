@@ -7,7 +7,14 @@ from routes.pingRoutes import ping_router
 from routes.deviceRoutes import router as device_router
 from routes.wifi import router as wifi_router
 
+from core.database import engine
+from models import * 
+from core.database import Base
+
 app = FastAPI()
+
+Base.metadata.create_all(bind=engine)
+
 
 # CORS for mobile frontend
 app.add_middleware(

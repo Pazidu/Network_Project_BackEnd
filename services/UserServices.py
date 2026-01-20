@@ -70,3 +70,14 @@ def update_user_profile(db: Session, current_email:str, email: str, firstName: s
     token_data = {"first_name": user.firstName, "last_name": user.lastName, "email": user.email}
     access_token = create_access_token(token_data)
     return {"token": access_token, "token_type": "bearer"}, None
+
+def reset_user_password(db: Session, email: str, new_password: str):
+    user = db.query(User).filter(User.email == email).first()
+
+    if not user:
+        return None, "User not found"
+    new_hashed_password = pwd_context.hash(new_password)
+    user.password = new_hashed_password
+    db.commit()
+    db.refresh(user)
+    return {"message": "Password reset successfully."}, None
