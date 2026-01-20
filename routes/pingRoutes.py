@@ -1,8 +1,10 @@
 import socket
 import time
 from fastapi import APIRouter
+from fastapi.responses import JSONResponse
+from ping3 import ping
 
-ping_router = APIRouter(prefix="/ping")
+ping_router = APIRouter()
 
 @ping_router.get("/")
 def ping_host():

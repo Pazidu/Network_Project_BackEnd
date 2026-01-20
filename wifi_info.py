@@ -3,7 +3,7 @@ import socket
 import subprocess
 import platform
 
-def get_windows_wifi_info():
+def get_wifi_info():
     """Get Wi-Fi info on Windows using netsh"""
     info = {}
     try:
@@ -38,7 +38,7 @@ def get_network_info():
     system = platform.system()
     
     if system == "Windows":
-        wifi_info = get_windows_wifi_info()
+        wifi_info = get_wifi_info()
         interface = wifi_info.get("adapter_name")
         ip, mac = get_ip_mac_info(interface) if interface else (None, None)
         
