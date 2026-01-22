@@ -18,6 +18,7 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
         db, user.firstName, user.lastName, user.email, user.password
     )
     if error:
+        print(error)
         raise HTTPException(status_code=400, detail=error)
     return {"message": "User registered successfully", "user_id": new_user.id}
 

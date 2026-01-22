@@ -6,6 +6,7 @@ from routes.pingRoutes import ping_router
 
 from routes.deviceRoutes import router as device_router
 from routes.wifi import router as wifi_router
+from services.deviceServices import start_scanner
 
 from core.database import engine
 from models import * 
@@ -32,3 +33,6 @@ app.include_router(ping_router, prefix="/ping")
 app.include_router(device_router, prefix="/devices")
 app.include_router(wifi_router, prefix="/network")
 
+@app.on_event("startup")
+def startup_event():
+    start_scanner()
