@@ -10,5 +10,3 @@ class User(Base):
     lastName = Column(String, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     password = Column(String, nullable=False)
-    reset_code = Column(String, nullable=True)
-    reset_code_expiry = Column(DateTime, nullable=True)

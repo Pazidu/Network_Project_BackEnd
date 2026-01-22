@@ -49,7 +49,8 @@ def update_profile(user: UserUpdate, current_user = Depends(get_current_user), d
 @router.post('/send-verification-code')
 async def request_password_reset(playload: PasswordResetRequest,db: Session = Depends(get_db)):
     email = playload.email
-    response, error = await send_code(db, email)
+    purpose = playload.flow
+    response, error = await send_code(db, email, purpose)
 
     if error:
         raise HTTPException(status_code=404, detail=error)
@@ -59,7 +60,8 @@ async def request_password_reset(playload: PasswordResetRequest,db: Session = De
 def verify_reset_code_endpoint(playload: PasswordResetVerify, db: Session = Depends(get_db)):
     email = playload.email
     code = playload.code
-    response, error = verify_code(db, email, code)
+    purpose = playload.flow
+    response, error = verify_code(db, email, code, purpose)
 
     if error:
         raise HTTPException(status_code=404, detail=error)

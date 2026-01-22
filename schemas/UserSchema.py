@@ -17,10 +17,12 @@ class UserUpdate(BaseModel):
 
 class PasswordResetRequest(BaseModel):
     email: EmailStr
+    flow: str
 
 class PasswordResetVerify(BaseModel):
     email: EmailStr
     code: str
+    flow: str
 
 class ResetPassword(BaseModel):
     email: EmailStr
