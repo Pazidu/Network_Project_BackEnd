@@ -4,7 +4,7 @@ import threading
 import time
 from datetime import datetime
 from services.oui import OUI_MAP
-
+from services.deviceHistoryService import update_device_uptime
 device_cache = {}
 cache_lock = threading.Lock()
 
@@ -110,15 +110,15 @@ def perform_scan():
             dev_id = f"{received.psrc}_{received.hwsrc}"
             seen.add(dev_id)
 
+            device_name = resolve_device_name(received.psrc, received.hwsrc)
+
             if dev_id not in device_cache:
                 device_cache[dev_id] = {
                     "id": dev_id,
                     "ip": received.psrc,
                     "mac": received.hwsrc,
                     "manufacturer": get_manufacturer(received.hwsrc),
-                    "device_name": resolve_device_name(
-                        received.psrc, received.hwsrc
-                    ),
+                    "device_name": device_name,
                     "status": "online",
                     "connected_at": now.isoformat() + "Z",
                     "last_seen": now.isoformat() + "Z",
@@ -134,15 +134,12 @@ def perform_scan():
                 dev["last_seen"] = now.isoformat() + "Z"
                 dev["disconnected_at"] = None
 
-        # Offline detection
-        for dev in device_cache.values():
-            last_seen = datetime.fromisoformat(
-                dev["last_seen"].replace("Z", "")
+            # ✅ MOVE THIS INSIDE THE LOOP
+            update_device_uptime(
+                ip=received.psrc,
+                mac=received.hwsrc,
+                name=device_name
             )
-            if (now - last_seen).total_seconds() > OFFLINE_AFTER:
-                if dev["status"] == "online":
-                    dev["status"] = "offline"
-                    dev["disconnected_at"] = now.isoformat() + "Z"
 
     print(f"Scan complete: {len(seen)} devices online")
 
