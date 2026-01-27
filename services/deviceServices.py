@@ -36,11 +36,19 @@ def get_hostname(ip: str):
 
 
 def resolve_device_name(ip, mac):
-    hostname = get_hostname(ip)
-    if hostname:
-        return hostname
+    try:
+        hostname = socket.gethostbyaddr(ip)[0]
+        if hostname and hostname != ip:
+            return hostname
+    except Exception:
+        pass
+
     manufacturer = get_manufacturer(mac)
-    return f"{manufacturer} device"
+    if manufacturer and manufacturer != "Unknown":
+        return f"{manufacturer} ({mac[-5:]})"
+
+    return f"Device ({mac[-5:]})"
+
 
 # ------------------ Packet Tracking ------------------
 
@@ -86,6 +94,7 @@ def start_traffic_sniffer(interface=None):
 # ------------------ Scanner ------------------
 
 def perform_scan():
+    # device_cache.clear()
     local_ip = get_local_ip()
     if local_ip == "127.0.0.1":
         return
@@ -130,6 +139,10 @@ def perform_scan():
                 }
             else:
                 dev = device_cache[dev_id]
+                if dev.get("device_name") in [None, "Unknown"]:
+                    dev["device_name"] = resolve_device_name(
+                        received.psrc, received.hwsrc
+                    )
                 dev["status"] = "online"
                 dev["last_seen"] = now.isoformat() + "Z"
                 dev["disconnected_at"] = None
