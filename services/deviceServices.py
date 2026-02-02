@@ -5,6 +5,9 @@ import time
 from datetime import datetime
 from services.oui import OUI_MAP
 from services.deviceHistoryService import update_device_uptime
+ 
+from services.wifiUtils import get_current_wifi
+
 device_cache = {}
 cache_lock = threading.Lock()
 
@@ -95,6 +98,11 @@ def start_traffic_sniffer(interface=None):
 
 def perform_scan():
     # device_cache.clear()
+    ssid, bssid = get_current_wifi()
+
+    if not ssid or not bssid:
+        print("Wi-Fi info not available")
+        return
     local_ip = get_local_ip()
     if local_ip == "127.0.0.1":
         return
@@ -151,8 +159,10 @@ def perform_scan():
             update_device_uptime(
                 ip=received.psrc,
                 mac=received.hwsrc,
-                name=device_name
-            )
+                name=device_name,
+                ssid=ssid,
+                bssid=bssid
+                )
 
     print(f"Scan complete: {len(seen)} devices online")
 
@@ -174,3 +184,5 @@ def force_scan():
 def get_cached_devices():
     with cache_lock:
         return list(device_cache.values())
+
+
