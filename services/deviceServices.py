@@ -31,13 +31,6 @@ def get_manufacturer(mac: str) -> str:
     return OUI_MAP.get(mac.upper()[0:8], "Unknown")
 
 
-def get_hostname(ip: str):
-    try:
-        return socket.gethostbyaddr(ip)[0]
-    except Exception:
-        return None
-
-
 def resolve_device_name(ip, mac):
     try:
         hostname = socket.gethostbyaddr(ip)[0]
@@ -47,62 +40,24 @@ def resolve_device_name(ip, mac):
         pass
 
     manufacturer = get_manufacturer(mac)
-    if manufacturer and manufacturer != "Unknown":
+    if manufacturer != "Unknown":
         return f"{manufacturer} ({mac[-5:]})"
 
     return f"Device ({mac[-5:]})"
 
 
-# ------------------ Packet Tracking ------------------
-
-def packet_handler(packet):
-    try:
-        if not packet.haslayer(scapy.IP):
-            return
-        src_ip = packet[scapy.IP].src
-        dst_ip = packet[scapy.IP].dst
-        size = len(packet)
-
-        with cache_lock:
-            for dev in device_cache.values():
-                if dev["ip"] == src_ip:
-                    dev.setdefault("bytes_sent", 0)
-                    dev.setdefault("packets_sent", 0)
-                    dev["bytes_sent"] += size
-                    dev["packets_sent"] += 1
-                elif dev["ip"] == dst_ip:
-                    dev.setdefault("bytes_recv", 0)
-                    dev.setdefault("packets_recv", 0)
-                    dev["bytes_recv"] += size
-                    dev["packets_recv"] += 1
-    except Exception as e:
-        print("Packet handler error:", e)
-
-
-def start_sniffer(interface=None):
-    scapy.sniff(
-        iface=interface,
-        prn=packet_handler,
-        store=False
-    )
-
-
-def start_traffic_sniffer(interface=None):
-    threading.Thread(
-        target=start_sniffer,
-        kwargs={"interface": interface},
-        daemon=True
-    ).start()
-
 # ------------------ Scanner ------------------
 
 def perform_scan():
+
     # device_cache.clear()
     ssid, bssid = get_current_wifi()
 
     if not ssid or not bssid:
         print("Wi-Fi info not available")
         return
+
+
     local_ip = get_local_ip()
     if local_ip == "127.0.0.1":
         return
@@ -124,7 +79,7 @@ def perform_scan():
 
     with cache_lock:
         for _, received in result:
-            dev_id = f"{received.psrc}_{received.hwsrc}"
+            dev_id = f"{received.psrc}_{received.hwsrc.lower()}"
             seen.add(dev_id)
 
             device_name = resolve_device_name(received.psrc, received.hwsrc)
@@ -133,7 +88,7 @@ def perform_scan():
                 device_cache[dev_id] = {
                     "id": dev_id,
                     "ip": received.psrc,
-                    "mac": received.hwsrc,
+                    "mac": received.hwsrc.lower(),
                     "manufacturer": get_manufacturer(received.hwsrc),
                     "device_name": device_name,
                     "status": "online",
@@ -143,18 +98,23 @@ def perform_scan():
                     "bytes_sent": 0,
                     "bytes_recv": 0,
                     "packets_sent": 0,
-                    "packets_recv": 0
+                    "packets_recv": 0,
+                    "sessions": {}   # 🔥 SESSION STORAGE
                 }
             else:
                 dev = device_cache[dev_id]
-                if dev.get("device_name") in [None, "Unknown"]:
-                    dev["device_name"] = resolve_device_name(
-                        received.psrc, received.hwsrc
-                    )
                 dev["status"] = "online"
                 dev["last_seen"] = now.isoformat() + "Z"
                 dev["disconnected_at"] = None
 
+        # Offline detection
+        for dev in device_cache.values():
+            last_seen = datetime.fromisoformat(dev["last_seen"].replace("Z", ""))
+            if (now - last_seen).total_seconds() > OFFLINE_AFTER:
+                if dev["status"] == "online":
+                    dev["status"] = "offline"
+                    dev["disconnected_at"] = now.isoformat() + "Z"
+                    
             # ✅ MOVE THIS INSIDE THE LOOP
             update_device_uptime(
                 ip=received.psrc,
@@ -177,12 +137,12 @@ def start_scanner():
     threading.Thread(target=scan_loop, daemon=True).start()
 
 
-def force_scan():
-    perform_scan()
-
-
 def get_cached_devices():
     with cache_lock:
         return list(device_cache.values())
 
+
+
+def force_scan():
+    perform_scan()
 

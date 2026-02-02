@@ -88,21 +88,20 @@ def get_network_usage():
 # ===================== DEVICE-WISE USAGE =====================
 @usage_router.get("/deviceUsage")
 def get_device_usage():
-    """
-    Per-device usage captured by Scapy traffic sniffer
-    """
     devices = []
 
     with cache_lock:
-        for mac, dev in device_cache.items():
+        for dev in device_cache.values():
             devices.append({
                 "device_name": dev.get("device_name", "Unknown"),
                 "ip": dev.get("ip"),
-                "mac": dev["mac"],
-                "upload_mb": round(dev["bytes_sent"] / (1024 * 1024), 2),
-                "download_mb": round(dev["bytes_recv"] / (1024 * 1024), 2),
-                "packets_sent": dev["packets_sent"],
-                "packets_recv": dev["packets_recv"]
+                "mac": dev.get("mac"),
+                "status": dev.get("status"),
+                "upload_mb": round(dev.get("bytes_sent", 0) / (1024 * 1024), 2),
+                "download_mb": round(dev.get("bytes_recv", 0) / (1024 * 1024), 2),
+                "packets_sent": dev.get("packets_sent", 0),
+                "packets_recv": dev.get("packets_recv", 0),
+                "session_count": len(dev.get("sessions", {}))  # ✅ ONLY COUNT
             })
 
     return {
