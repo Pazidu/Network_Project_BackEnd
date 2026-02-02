@@ -10,7 +10,11 @@ from routes.networkUsageRoutes import usage_router
 
 from services.deviceServices import start_scanner
 from services.trafficSniffer import start_traffic_sniffer
+
+from routes.deviceHistoryRoute import router as device_history_route
+
 from wifi_info import get_wifi_info  # import get_wifi_info to get adapter name
+
 
 from core.database import engine
 from models import *
@@ -37,7 +41,11 @@ app.include_router(user_router, prefix="/user")
 app.include_router(ping_router, prefix="/ping")
 app.include_router(device_router, prefix="/devices")
 app.include_router(wifi_router, prefix="/network")
+
+app.include_router(device_history_route)
+
 app.include_router(usage_router, prefix="/network-usage")
+
 
 
 @app.on_event("startup")
