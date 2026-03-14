@@ -14,18 +14,12 @@ deactivate () {
         unset _OLD_VIRTUAL_PYTHONHOME
     fi
 
-<<<<<<< HEAD
     # This should detect bash and zsh, which have a hash command that must
     # be called to get it to forget past commands.  Without forgetting
     # past commands the $PATH changes we made may not be respected
     if [ -n "${BASH:-}" -o -n "${ZSH_VERSION:-}" ] ; then
         hash -r 2> /dev/null
     fi
-=======
-    # Call hash to forget past commands. Without forgetting
-    # past commands the $PATH changes we made may not be respected
-    hash -r 2> /dev/null
->>>>>>> cd9910b2c20d9bfb815fb9cab53c6dd4d24c65a9
 
     if [ -n "${_OLD_VIRTUAL_PS1:-}" ] ; then
         PS1="${_OLD_VIRTUAL_PS1:-}"
@@ -44,20 +38,8 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-<<<<<<< HEAD
 VIRTUAL_ENV="D:\Network_Project\Project\Network_Project_BackEnd\venv"
 export VIRTUAL_ENV
-=======
-# on Windows, a path can contain colons and backslashes and has to be converted:
-if [ "${OSTYPE:-}" = "cygwin" ] || [ "${OSTYPE:-}" = "msys" ] ; then
-    # transform D:\path\to\venv to /d/path/to/venv on MSYS
-    # and to /cygdrive/d/path/to/venv on Cygwin
-    export VIRTUAL_ENV=$(cygpath "D:\4S\Network project\Network_Project_BackEnd\venv")
-else
-    # use the path as-is
-    export VIRTUAL_ENV="D:\4S\Network project\Network_Project_BackEnd\venv"
-fi
->>>>>>> cd9910b2c20d9bfb815fb9cab53c6dd4d24c65a9
 
 _OLD_VIRTUAL_PATH="$PATH"
 PATH="$VIRTUAL_ENV/Scripts:$PATH"
