@@ -5,6 +5,9 @@ import time
 from datetime import datetime
 from services.oui import OUI_MAP
 from services.deviceHistoryService import update_device_uptime
+from wifi_info import get_wifi_info
+from services.wifiUtils import get_current_wifi
+
 device_cache = {}
 cache_lock = threading.Lock()
 
@@ -42,10 +45,16 @@ def resolve_device_name(ip, mac):
 
     return f"Device ({mac[-5:]})"
 
-
 # ------------------ Scanner ------------------
 
 def perform_scan():
+    print(socket.gethostbyname(socket.gethostname()))
+    ssid, bssid = get_current_wifi()
+
+    if not ssid or not bssid:
+        print("Wi-Fi info not available")
+        return
+
     local_ip = get_local_ip()
     if local_ip == "127.0.0.1":
         return
@@ -56,8 +65,20 @@ def perform_scan():
     ether = scapy.Ether(dst="ff:ff:ff:ff:ff:ff")
     packet = ether / arp
 
+    wifi =get_wifi_info()
+    interface = wifi.get("adapter_name")
+
+    if not interface:
+        print("No WIFI interface found for scanning")
+        return
     try:
-        result = scapy.srp(packet, timeout=2, verbose=False)[0]
+        result = scapy.srp(
+                            packet,
+                            timeout=3,
+                            iface=interface,   # or specify WiFi adapter name
+                            verbose=False
+                        )[0]
+
     except PermissionError:
         print("Run as Administrator")
         return
@@ -87,7 +108,7 @@ def perform_scan():
                     "bytes_recv": 0,
                     "packets_sent": 0,
                     "packets_recv": 0,
-                    "sessions": {}   # 🔥 SESSION STORAGE
+                    "sessions": {}
                 }
             else:
                 dev = device_cache[dev_id]
@@ -95,22 +116,33 @@ def perform_scan():
                 dev["last_seen"] = now.isoformat() + "Z"
                 dev["disconnected_at"] = None
 
-        # Offline detection
+            
+            update_device_uptime(
+                ip=received.psrc,
+                mac=received.hwsrc.lower(),
+                name=device_name,
+                ssid=ssid,
+                bssid=bssid
+            )
+
+        
         for dev in device_cache.values():
             last_seen = datetime.fromisoformat(dev["last_seen"].replace("Z", ""))
             if (now - last_seen).total_seconds() > OFFLINE_AFTER:
                 if dev["status"] == "online":
                     dev["status"] = "offline"
                     dev["disconnected_at"] = now.isoformat() + "Z"
-                    
-            # ✅ MOVE THIS INSIDE THE LOOP
-            update_device_uptime(
-                ip=received.psrc,
-                mac=received.hwsrc,
-                name=device_name
-            )
+    print("Local IP:", local_ip)
+    print("Subnet:", subnet)
+    print("ARP Raw Result:", result)
+    print("ARP Count:", len(result))
 
     print(f"Scan complete: {len(seen)} devices online")
+
+   
+   
+
+
 
 
 def scan_loop():
@@ -127,5 +159,8 @@ def get_cached_devices():
     with cache_lock:
         return list(device_cache.values())
 
+
+
 def force_scan():
     perform_scan()
+

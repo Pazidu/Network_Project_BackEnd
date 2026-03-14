@@ -1,3 +1,5 @@
+from Network_Monitor.app import main
+
 import threading
 
 from fastapi import FastAPI
@@ -62,8 +64,12 @@ def startup_event():
     else:
         print("Wi-Fi adapter not found. Traffic sniffer not started.")
 
-# def start_backend():
-#     uvicorn.run("main:app", host="0.0.0.0", port=8000)
+def start_backend():
+    uvicorn.run("main:app", host="0.0.0.0", port=8000)
 
-# # Start the backend in a background thread
-# threading.Thread(target=start_backend, daemon=True).start()
+# Start the backend in a background thread
+threading.Thread(target=start_backend, daemon=True).start()
+
+
+if __name__ == "__main__":
+    main().main_loop()
