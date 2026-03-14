@@ -5,8 +5,11 @@ import socket
 import json
 import os
 
+from core.database import SessionLocal
 from wifi_info import get_wifi_info
 from services.deviceServices import device_cache, cache_lock
+from models.Sitevisited import WebsiteLog
+from sqlalchemy import func
 
 usage_router = APIRouter()
 
@@ -115,3 +118,21 @@ def get_device_usage():
 @usage_router.get("/realUsage")
 def get_real_network_usage():
     return get_wifi_info()
+
+@usage_router.get("/Sitevisited/{mac}")
+def daily_stats(mac: str):
+    db = SessionLocal()
+
+    results = (
+        db.query(
+            func.date(WebsiteLog.timestamp).label("day"),
+            func.count(WebsiteLog.id).label("count")
+        )
+        .filter(WebsiteLog.mac_address == mac)
+        .group_by(func.date(WebsiteLog.timestamp))
+        .all()
+    )
+
+    db.close()
+
+    return [{"date": str(r.day), "count": r.count} for r in results]

@@ -2,6 +2,14 @@ import scapy.all as scapy
 import threading
 from datetime import datetime
 from services.deviceServices import device_cache, cache_lock
+from scapy.layers.dns import DNS, DNSQR
+from models.Sitevisited import WebsiteLog
+from services.websiteService import save_dns
+from wifi_info import get_wifi_info  
+from scapy.layers.inet import IP
+from scapy.layers.dns import DNS, DNSQR
+# from scapy.all import sniff 
+
 
 
 def packet_handler(packet):
@@ -29,6 +37,33 @@ def packet_handler(packet):
         dst_port = packet[scapy.UDP].dport
 
     session_id = f"{src_ip}:{src_port}→{dst_ip}:{dst_port}/{protocol}"
+    # # -------- DNS Detection --------
+    # if packet.haslayer(DNS) and packet.haslayer(DNSQR):
+    #     dns_query = packet[DNSQR].qname.decode().rstrip(".")
+    
+    # # only log real domain names (avoid local junk)
+    # if "." in dns_query:
+    #     wifi_id = get_wifi_info()
+    #     save_dns(src_mac, dns_query, wifi_id=1)  
+
+    if packet.haslayer(DNS) and packet.haslayer(DNSQR):
+        dns = packet[DNS]
+
+    if dns.qr == 0:
+        domain = packet[DNSQR].qname.decode().rstrip(".").lower()
+        source_mac = packet[scapy.Ether].src.lower()
+
+        if "." not in domain:
+            return
+
+        IGNORE = ["gstatic", "connectivitycheck", "windows"]
+
+        if any(x in domain for x in IGNORE):
+            return
+
+        print(f"{source_mac} visited {domain}")
+
+        save_dns(source_mac, domain)
 
     with cache_lock:
         src_key = f"{src_ip}_{src_mac}"
@@ -64,11 +99,12 @@ def packet_handler(packet):
             dev["bytes_recv"] += size
             dev["packets_recv"] += 1
 
-
+# sniff(filter="udp port 53", prn=packet_handler)
 def start_sniffer(interface=None):
     print(f"Sniffer started on interface: {interface}")
     scapy.sniff(
         iface=interface,
+        filter="udp port 53",
         prn=packet_handler,
         store=False,
         promisc=True

@@ -14,6 +14,8 @@ class DeviceHistory(Base):
     device_name = Column(String)
 
     date = Column(Date)
+    risk_score = Column(Integer, default=0)
+    risk_level = Column(String, default="Safe")
     first_seen = Column(DateTime)
     last_seen = Column(DateTime)
     total_uptime_seconds = Column(Integer, default=0)
