@@ -15,6 +15,7 @@ from routes.deviceHistoryRoute import router as device_history_route
 from wifi_info import get_wifi_info  # import get_wifi_info to get adapter name
 from routes.notificationRoute import router as notification_router
 from routes.secrity_summeryRoute import router as security_summary_route
+from routes.websiteRouter import router as website_router
 
 from core.database import engine
 from models import *
@@ -45,6 +46,7 @@ app.include_router(device_history_route)
 app.include_router(usage_router, prefix="/network-usage")
 app.include_router(notification_router)
 app.include_router(security_summary_route)
+app.include_router(website_router)
 
 
 
