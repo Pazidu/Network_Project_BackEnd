@@ -116,7 +116,6 @@ def perform_scan():
                 dev["last_seen"] = now.isoformat() + "Z"
                 dev["disconnected_at"] = None
 
-            
             update_device_uptime(
                 ip=received.psrc,
                 mac=received.hwsrc.lower(),
@@ -125,17 +124,21 @@ def perform_scan():
                 bssid=bssid
             )
 
-        
+
         for dev in device_cache.values():
             last_seen = datetime.fromisoformat(dev["last_seen"].replace("Z", ""))
             if (now - last_seen).total_seconds() > OFFLINE_AFTER:
                 if dev["status"] == "online":
                     dev["status"] = "offline"
                     dev["disconnected_at"] = now.isoformat() + "Z"
+
+            
+
     print("Local IP:", local_ip)
     print("Subnet:", subnet)
     print("ARP Raw Result:", result)
     print("ARP Count:", len(result))
+
 
     print(f"Scan complete: {len(seen)} devices online")
 
