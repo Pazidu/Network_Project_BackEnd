@@ -207,7 +207,7 @@ Before running the system install:
 * To generate an APK file:  
   * cd android  
 * Run  
-  * .\\gradlew assembleRelease  
+  * .\gradlew assembleRelease  
 * APK location:  
   * android/app/build/outputs/apk/debug/app-debug.apk  
 * You can share this APK file to install the application on other Android devices.
