@@ -112,21 +112,17 @@ Provides the user interface where users can:
 
 * Python  
 * JavaScript  
-* SQL
+
 
 ## **Backend**
 
-* FastAPI (Backend API)  
-* Scapy  
-* Uvicorn  
-* SQLALchemy
+* Python
+* FastAPI
 
 ## **Frontend**
 
 * React Native  
-* React Navigation  
-* Lucide React  
-* Axios
+
 
 ## 	**Security**
 
