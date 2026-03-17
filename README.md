@@ -230,7 +230,7 @@ The application will display:
 
   Team Lead  
   2021/CSC/042  
-  Email: [mohomedamccimshan@gmail.com](mailto:mohomedamccimshan@gmail.com)  
+  Email: mohomedamccimshan@gmail.com
   Responsibilities:  
 * Backend development  
 * System integration  
@@ -238,7 +238,7 @@ The application will display:
 
   ### **W.G.P.B Wilagama**
 
-  2021/CSC/042  
+  2021/CSC/064  
   Email: pasidubhagya20@gmail.com  
   Responsibilities:  
 * Backend development
@@ -252,7 +252,7 @@ The application will display:
 
   ### **K.G.K Imalsha**
 
-  2021/CSC/042  
+  2021/CSC/023 
   Email: kavishkaimalsha@gmail.com  
   Responsibilities:  
 * Authentication implementation  
